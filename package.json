@@ -42,11 +42,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BStormIT/viucraft-js"
+    "url": "https://github.com/BStorm-IT/viucraft-js"
   },
-  "homepage": "https://github.com/BStormIT/viucraft-js#readme",
+  "homepage": "https://github.com/BStorm-IT/viucraft-js#readme",
   "bugs": {
-    "url": "https://github.com/BStormIT/viucraft-js/issues"
+    "url": "https://github.com/BStorm-IT/viucraft-js/issues"
   },
   "engines": {
     "node": ">=18.0.0"
