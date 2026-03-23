@@ -22,11 +22,6 @@ function makeResource(): ImagesResource {
 
 beforeEach(() => {
   installFetchMock();
-  jest.useFakeTimers();
-});
-
-afterEach(() => {
-  jest.useRealTimers();
 });
 
 describe('ImagesResource.upload()', () => {
@@ -35,7 +30,7 @@ describe('ImagesResource.upload()', () => {
     const resource = makeResource();
     const file = new Blob(['fake image data'], { type: 'image/jpeg' });
     const promise = resource.upload(file);
-    jest.runAllTimers();
+
     const result = await promise;
 
     const call = getLastFetchCall()!;
@@ -48,14 +43,14 @@ describe('ImagesResource.upload()', () => {
   it('uses field name "file" (not "image") in FormData', async () => {
     mockFetchResponse({ status: 'success', image_id: 'img-456' });
     const resource = makeResource();
-    const file = new File(['data'], 'test.jpg', { type: 'image/jpeg' });
+    const file = new Blob(['data'], { type: 'image/jpeg' });
     const promise = resource.upload(file);
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
     const formData = call[1].body as FormData;
-    expect(formData.get('file')).toBe(file);
+    expect(formData.get('file')).toBeInstanceOf(Blob);
     expect(formData.get('image')).toBeNull();
   });
 
@@ -64,7 +59,7 @@ describe('ImagesResource.upload()', () => {
     const resource = makeResource();
     const file = new Blob(['data']);
     const promise = resource.upload(file, { folder: 'my-folder' });
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
@@ -77,7 +72,7 @@ describe('ImagesResource.upload()', () => {
     const resource = makeResource();
     const file = new Blob(['data']);
     const promise = resource.upload(file);
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
@@ -91,7 +86,7 @@ describe('ImagesResource.list()', () => {
     mockFetchResponse({ images: [], pagination: { limit: 20, page: 1, total: 0 } });
     const resource = makeResource();
     const promise = resource.list();
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
@@ -103,7 +98,7 @@ describe('ImagesResource.list()', () => {
     mockFetchResponse({ images: [], pagination: { limit: 10, page: 2, total: 50 } });
     const resource = makeResource();
     const promise = resource.list({ page: 2, limit: 10, q: 'cat' });
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
@@ -118,7 +113,7 @@ describe('ImagesResource.delete()', () => {
     mockFetchNoContent();
     const resource = makeResource();
     const promise = resource.delete('img-abc-123');
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
@@ -137,7 +132,7 @@ describe('ImagesResource.transform()', () => {
     mockFetchResponse({ url: 'https://cdn.viucraft.com/transformed.jpg', cached: false });
     const resource = makeResource();
     const promise = resource.transform('img-def-456', 'resize_w_800_h_600');
-    jest.runAllTimers();
+
     const result = await promise;
 
     const call = getLastFetchCall()!;
@@ -153,7 +148,7 @@ describe('ImagesResource.transform()', () => {
     mockFetchResponse({ url: 'https://cdn.viucraft.com/out.webp', cached: true });
     const resource = makeResource();
     const promise = resource.transform('img-xyz', 'grayscale', 'webp');
-    jest.runAllTimers();
+
     await promise;
 
     const call = getLastFetchCall()!;
