@@ -5,6 +5,7 @@ import {
   UploadResponse,
   ImageListResponse,
   DeleteResponse,
+  AccountConfigResponse,
 } from '../types';
 import { FetchClient } from './FetchClient';
 import { ImageBuilder } from '../builder/ImageBuilder';
@@ -44,9 +45,11 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
  */
 export class ViucraftClient {
   private readonly apiKey: string;
-  private readonly subdomain?: string;
-  private readonly baseUrl: string;
-  private readonly accountId?: string;
+  // Mutable so the client can self-heal after a plan change via resolveEndpoint()/updateConfig().
+  // image() reads these at call time, so updates take effect on the next URL built.
+  private subdomain?: string;
+  private baseUrl: string;
+  private accountId?: string;
   private http: FetchClient;
 
   /** Image CRUD operations */
@@ -121,24 +124,79 @@ export class ViucraftClient {
   }
 
   /**
-   * Update client configuration after construction.
-   * @param partial Partial configuration to merge
+   * Construct a client and immediately resolve its current endpoint config from the API.
+   * Prefer this over `new ViucraftClient(...)` when the account's plan/subdomain may have
+   * changed since the credentials were issued — it guarantees the first URL you build uses
+   * the correct (possibly downgraded) base.
    */
-  public updateConfig(partial: Partial<Pick<ViucraftClientConfig, 'apiKey' | 'timeout'>>): void {
+  public static async create(config: ViucraftClientConfig): Promise<ViucraftClient> {
+    const client = new ViucraftClient(config);
+    await client.resolveEndpoint();
+    return client;
+  }
+
+  /**
+   * Fetch the account's current canonical URL configuration from `GET /api/v1/account`
+   * and apply it, so subsequent `image()` calls target the right base. This is the SDK's
+   * self-heal for plan changes: after a paid→free downgrade the server reports
+   * `subdomain: null`, and the builder switches from the (now-dead) subdomain URL to the
+   * shared `/free/acc_*` URL automatically.
+   *
+   * @returns The resolved account configuration.
+   */
+  public async resolveEndpoint(): Promise<AccountConfigResponse> {
+    const cfg = await this.http.get<AccountConfigResponse>('/api/v1/account');
+
+    // null subdomain MUST clear a previously-cached subdomain (the downgrade case).
+    this.subdomain = cfg.subdomain ?? undefined;
+    this.accountId = cfg.account_id ?? undefined;
+    if (cfg.base_url) {
+      this.baseUrl = cfg.base_url;
+    }
+
+    const currentConfig = (this.http as unknown as { config: ResolvedClientConfig }).config;
+    this.rebuildHttp({ ...currentConfig, apiKey: this.apiKey, baseUrl: this.baseUrl });
+
+    return cfg;
+  }
+
+  /**
+   * Update client configuration after construction.
+   * @param partial Partial configuration to merge. Pass `subdomain: null` (or '') to clear
+   *   a subdomain and fall back to the free-tier URL form.
+   */
+  public updateConfig(
+    partial: Partial<Pick<ViucraftClientConfig, 'apiKey' | 'timeout' | 'baseUrl' | 'accountId'>>
+      & { subdomain?: string | null }
+  ): void {
     if (partial.apiKey !== undefined) {
       validateApiKey(partial.apiKey);
     }
-    // Re-create FetchClient with updated config
+    if (partial.subdomain !== undefined) {
+      this.subdomain = partial.subdomain || undefined;
+    }
+    if (partial.accountId !== undefined) {
+      this.accountId = partial.accountId || undefined;
+    }
+    if (partial.baseUrl !== undefined) {
+      this.baseUrl = partial.baseUrl;
+    }
+
     const currentConfig = (this.http as unknown as { config: ResolvedClientConfig }).config;
-    const newConfig: ResolvedClientConfig = {
+    this.rebuildHttp({
       apiKey: partial.apiKey ?? this.apiKey,
       baseUrl: this.baseUrl,
       timeout: partial.timeout ?? currentConfig.timeout,
       retry: currentConfig.retry,
-    };
-    this.http = new FetchClient(newConfig);
+    });
+  }
 
-    // Re-mount resource modules with new FetchClient
+  /**
+   * Recreate the HTTP client with a new resolved config and re-mount all resource modules.
+   */
+  private rebuildHttp(config: ResolvedClientConfig): void {
+    this.http = new FetchClient(config);
+
     (this as { images: ImagesResource }).images = new ImagesResource(this.http);
     (this as { batch: BatchResource }).batch = new BatchResource(this.http);
     (this as { webhooks: WebhooksResource }).webhooks = new WebhooksResource(this.http);
