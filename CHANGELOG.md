@@ -5,6 +5,27 @@ All notable changes to the VIUCraft JavaScript SDK will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-06-09
+
+### Added
+- `ViucraftClient.resolveEndpoint()` — fetches the account's current canonical URL config
+  from `GET /api/v1/account` and applies it, so the client self-heals after a plan change.
+  After a paid→free downgrade the server reports `subdomain: null` and the URL builder
+  automatically switches from the (now-deactivated) subdomain URL to the shared
+  `/free/acc_*` URL.
+- `ViucraftClient.create(config)` — static async factory that constructs a client and
+  resolves its endpoint before returning, guaranteeing the first URL uses the correct base.
+- `AccountConfigResponse` type, exported from the package root.
+
+### Changed
+- `updateConfig()` now also accepts `subdomain`, `baseUrl`, and `accountId`. Pass
+  `subdomain: null` (or `''`) to clear a subdomain and fall back to the free-tier URL form.
+
+### Fixed
+- A long-lived client that cached a `subdomain` at construction no longer keeps generating
+  dead URLs after the customer's subdomain is deactivated — call `resolveEndpoint()` (or use
+  `create()`) to pick up the change.
+
 ## [2.0.0] - 2026-03-20
 
 ### Breaking Changes

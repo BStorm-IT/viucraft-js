@@ -445,6 +445,23 @@ export interface ResolvedClientConfig {
   retry: RetryConfig | false;
 }
 
+/**
+ * Response from `GET /api/v1/account` — the SDK's current canonical URL configuration.
+ * Used by {@link ViucraftClient.resolveEndpoint} to self-heal after a plan change
+ * (e.g. a paid→free downgrade deactivates the subdomain and `subdomain` becomes null).
+ */
+export interface AccountConfigResponse {
+  plan: string;
+  /** null on the free tier (or when no subdomain is assigned). */
+  subdomain: string | null;
+  /** e.g. "acc_123" — used to build the shared free-tier URL. */
+  account_id: string;
+  /** Host base for URL assembly, e.g. "https://api.viucraft.com". */
+  base_url: string;
+  /** Fully-resolved canonical image base for this customer (convenience/debug). */
+  image_base_url: string;
+}
+
 export interface RequestOptions {
   headers?: Record<string, string>;
   body?: BodyInit;

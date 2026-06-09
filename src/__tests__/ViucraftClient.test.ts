@@ -14,6 +14,7 @@ import {
   installFetchMock,
   mockFetchResponse,
   mockFetchNoContent,
+  mockFetch,
 } from './helpers/mockFetch';
 
 beforeEach(() => {
@@ -187,6 +188,76 @@ describe('ViucraftClient', () => {
       const client = makeClient();
       // Should not throw
       expect(() => client.updateConfig({ timeout: 5000 })).not.toThrow();
+    });
+
+    it('clears the subdomain when passed null and falls back to the free-tier URL', () => {
+      const client = makeClient({ subdomain: 'myapp', accountId: 'acc_9' });
+      expect(client.image('x').resize(10, 10).toURL()).toContain('myapp.viucraft.com');
+
+      client.updateConfig({ subdomain: null });
+
+      const url = client.image('x').resize(10, 10).toURL();
+      expect(url).not.toContain('myapp.viucraft.com');
+      expect(url).toContain('/free/acc_9/');
+    });
+
+    it('sets a new subdomain', () => {
+      const client = makeClient({ accountId: 'acc_9' });
+      client.updateConfig({ subdomain: 'newsub' });
+      expect(client.image('x').resize(10, 10).toURL()).toContain('newsub.viucraft.com');
+    });
+  });
+
+  describe('resolveEndpoint() self-heal', () => {
+    const FREE_CONFIG = {
+      plan: 'free',
+      subdomain: null,
+      account_id: 'acc_42',
+      base_url: 'https://api.viucraft.com',
+      image_base_url: 'https://api.viucraft.com/free/acc_42',
+    };
+
+    it('switches a downgraded client from subdomain URLs to the free-tier URL', async () => {
+      const client = makeClient({ subdomain: 'myapp' });
+      // Before downgrade: builds the subdomain URL.
+      expect(client.image('img-1').resize(100, 100).toURL()).toContain('myapp.viucraft.com');
+
+      mockFetchResponse(FREE_CONFIG);
+      await client.resolveEndpoint();
+
+      // After: subdomain is gone, builder uses the shared free-tier URL.
+      const url = client.image('img-1').resize(100, 100).toURL();
+      expect(url).not.toContain('myapp.viucraft.com');
+      expect(url.startsWith('https://api.viucraft.com/free/acc_42/')).toBe(true);
+      expect(url).toContain('img-1');
+    });
+
+    it('requests GET /api/v1/account', async () => {
+      const client = makeClient({ subdomain: 'myapp' });
+      mockFetchResponse(FREE_CONFIG);
+      await client.resolveEndpoint();
+      expect(mockFetch).toHaveBeenCalled();
+      const calledUrl = String(mockFetch.mock.calls[0]?.[0] ?? '');
+      expect(calledUrl).toContain('/api/v1/account');
+    });
+
+    it('returns the resolved config', async () => {
+      const client = makeClient();
+      mockFetchResponse(FREE_CONFIG);
+      const cfg = await client.resolveEndpoint();
+      expect(cfg.account_id).toBe('acc_42');
+      expect(cfg.subdomain).toBeNull();
+    });
+
+    it('create() resolves the endpoint before returning the client', async () => {
+      mockFetchResponse(FREE_CONFIG);
+      const client = await ViucraftClient.create({
+        apiKey: 'test-api-key-123',
+        subdomain: 'myapp',
+        retry: false,
+      });
+      const url = client.image('img-1').resize(100, 100).toURL();
+      expect(url.startsWith('https://api.viucraft.com/free/acc_42/')).toBe(true);
     });
   });
 

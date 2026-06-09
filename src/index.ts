@@ -29,6 +29,7 @@ export { DiscoveryResource } from './resources/DiscoveryResource';
 export type {
   // Client config
   ViucraftClientConfig,
+  AccountConfigResponse,
   RetryConfig,
   RateLimitInfo,
 

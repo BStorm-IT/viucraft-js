@@ -58,7 +58,28 @@ You can also update certain config values after construction:
 ```javascript
 client.updateConfig({ apiKey: 'new-api-key' });
 client.updateConfig({ timeout: 5000 });
+client.updateConfig({ subdomain: null }); // clear subdomain → use the free-tier URL
 ```
+
+### Keeping URLs correct across plan changes
+
+A client caches the `subdomain` / `accountId` it was built with, so a long-lived instance
+can keep generating subdomain URLs after a customer downgrades to free (which deactivates
+their subdomain). Call `resolveEndpoint()` to fetch the account's current configuration from
+the API and rebuild URLs against the correct base:
+
+```javascript
+// Re-sync the client with the account's current plan/subdomain.
+await client.resolveEndpoint();
+// After a paid→free downgrade, image URLs now use the shared /free/acc_* form automatically.
+
+// Or resolve up front when constructing:
+const client = await ViucraftClient.create({ apiKey: 'your-api-key-here' });
+```
+
+> Note: even without an SDK upgrade, requests to a deactivated subdomain are transparently
+> redirected (HTTP 302) to the free-tier URL server-side, so previously-published image URLs
+> keep working.
 
 ## Chainable API (Recommended)
 
