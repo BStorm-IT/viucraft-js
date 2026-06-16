@@ -472,9 +472,22 @@ describe('formatShortInstructions', () => {
     expect(result).toBe('pix-10');
   });
 
-  it('should format noise with type and amount', () => {
+  // The server's dash parser maps `noise-<amount>-<type>` (amount first), so the dash form
+  // cannot carry the enum `type` — `noise-gaussian-0.2` is rejected with 400 (verified against
+  // staging). The SDK therefore emits the explicit long form for noise even in short mode.
+  it('should format noise with the server-valid long form (type+amount)', () => {
     const result = formatShortInstructions({ noise: { type: 'gaussian', amount: 0.2 } });
-    expect(result).toBe('noise-gaussian-0.2');
+    expect(result).toBe('noise_type_gaussian_amount_0.2');
+  });
+
+  it('should format noise with type only as the long form', () => {
+    const result = formatShortInstructions({ noise: { type: 'salt' } });
+    expect(result).toBe('noise_type_salt');
+  });
+
+  it('should never emit the server-rejected dash form for noise', () => {
+    const result = formatShortInstructions({ noise: { type: 'gaussian', amount: 0.2 } });
+    expect(result).not.toContain('noise-');
   });
 
   it('should format noise with empty object', () => {

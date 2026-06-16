@@ -132,7 +132,7 @@ These are confirmed live in **v2.1.0**. The test suite currently passes *because
 
 2. **`crop()` lower-bound validation is dead (P2).** In `ImageBuilder.crop()`: `validateRange('height', height, height, MAX_DIMENSION)` — the min bound is `height` itself, so the lower-bound check can never fail. Should be `validateRange('height', height, 1, MAX_DIMENSION)`.
 
-3. **`useShort` grammar is not server-uniform (P2).** `utils.ts` emits dash-form short URLs (`resize-W-H`), but the server only accepts the dash form for some ops (per `docs/VIUCRAFT-INTEGRATION-FEEDBACK.md`, `smartcrop`/`thumbnail` reject it → 400). Until the server accepts both uniformly, validate per-op which grammar is server-valid and don't emit a form that 400s.
+3. **`useShort` grammar — `noise` order mismatch (FIXED 2026-06-16).** The audit suspected `smartcrop`/`thumbnail` dash-forms returned 400; a live URL contract test against a staging tenant (`scripts/url-contract-test.mjs`) **disproved that** — `scrop-W-H`, `thumb-W-H`, and `thumb-W-H-crop` all return 200. The real defect was `noise`: the server's dash parser maps `noise-<amount>-<type>` (amount first, per the backend `SHORT_FORMAT_MAP`), but the SDK emitted `noise-<type>-<amount>`, so `noise-gaussian-0.2` → 400. `utils.ts` now emits the explicit long form for `noise` in short mode (server-valid for any params). Two bug-locking tests were corrected. Re-run the contract test after any `utils.ts`/`ImageBuilder.ts` change.
 
 Treat any new code in these files as guilty until a contract-fidelity test (Gate 6) proves it innocent.
 

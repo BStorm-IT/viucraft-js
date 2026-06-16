@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`useShort()` emitted a server-rejected URL for `noise`.** The server's dash parser maps
+  `noise-<amount>-<type>` (amount first), but the SDK emitted `noise-<type>-<amount>`, so a
+  short-form noise URL (`noise-gaussian-0.2`) returned `400`. The builder now emits the explicit
+  long form for `noise` in short mode (`noise_type_gaussian_amount_0.2`), which the server accepts
+  for any combination of params. Verified against a live tenant by the new URL contract test; two
+  tests that asserted the broken dash output were corrected. (The audit's suspicion that
+  `smartcrop`/`thumbnail` short-forms `400` was **not** reproduced — those return `200`.)
+
 ### Added
 - **`ViucraftError.requestId`.** Errors now carry the server-assigned request identifier (read
   from the `X-Request-Id` response header, falling back to the error envelope's `request_id`).

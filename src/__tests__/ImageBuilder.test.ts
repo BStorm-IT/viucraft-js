@@ -535,9 +535,12 @@ describe('ImageBuilder', () => {
       expect(url).toContain('noise_type_gaussian_amount_0.2');
     });
 
-    it('should generate correct short format', () => {
+    it('should emit the server-valid long form for noise even in short mode', () => {
+      // The server rejects the dash form `noise-gaussian-0.2` (400) because its dash parser
+      // expects amount first; the SDK emits the explicit long form instead. See VC-SDK-03.
       const url = builder().useShort().noise('gaussian', 0.2).toURL();
-      expect(url).toContain('noise-gaussian-0.2');
+      expect(url).toContain('noise_type_gaussian_amount_0.2');
+      expect(url).not.toContain('noise-');
     });
 
     it('should work with no params', () => {

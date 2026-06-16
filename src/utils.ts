@@ -429,12 +429,15 @@ export function formatShortInstructions(instructions: ProcessingInstructions): s
     segments.push(`pix-${size}`);
   }
 
-  // noise
+  // noise — the server's dash parser maps `noise-<amount>-<type>` (amount first), so the
+  // short form cannot safely carry the enum `type`: a leading string fails float validation
+  // and the server returns 400 (verified against staging). Emit the explicit long form, which
+  // is server-valid for any combination of params. See VC-SDK-03 + the URL contract test.
   if (instructions.noise) {
     const parts = ['noise'];
-    if (instructions.noise.type) parts.push(instructions.noise.type);
-    if (instructions.noise.amount !== undefined) parts.push(String(instructions.noise.amount));
-    segments.push(parts.join('-'));
+    if (instructions.noise.type) parts.push(`type_${instructions.noise.type}`);
+    if (instructions.noise.amount !== undefined) parts.push(`amount_${instructions.noise.amount}`);
+    segments.push(parts.join('_'));
   }
 
   // edge
