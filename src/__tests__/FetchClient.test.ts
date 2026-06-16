@@ -257,4 +257,53 @@ describe('FetchClient - error responses', () => {
     const result = await promise;
     expect(result).toEqual(data);
   });
+
+  it('parses the canonical nested error envelope (message, code, request_id)', async () => {
+    mockFetchResponse(
+      {
+        error: {
+          code: 'image_not_found',
+          message: 'The requested image does not exist or has been deleted.',
+          status: 404,
+          request_id: 'req_abc123',
+          retryable: false,
+        },
+      },
+      404
+    );
+    const client = makeClient({ retry: false });
+    const promise = client.get('/images/missing');
+    jest.runAllTimers();
+    const error = await promise.catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ViucraftError);
+    expect((error as ViucraftError).status).toBe(404);
+    expect((error as ViucraftError).message).toBe(
+      'The requested image does not exist or has been deleted.'
+    );
+    expect((error as ViucraftError).code).toBe('image_not_found');
+    expect((error as ViucraftError).requestId).toBe('req_abc123');
+  });
+
+  it('prefers the X-Request-Id response header for requestId', async () => {
+    mockFetchResponse({ error: { code: 'invalid_parameter', message: 'Bad value' } }, 400, {
+      'x-request-id': 'req_from_header',
+    });
+    const client = makeClient({ retry: false });
+    const promise = client.get('/images');
+    jest.runAllTimers();
+    const error = await promise.catch((e: unknown) => e);
+    expect((error as ViucraftError).requestId).toBe('req_from_header');
+    expect((error as ViucraftError).code).toBe('invalid_parameter');
+  });
+
+  it('still handles the legacy flat error shape ({ error: "<message>" })', async () => {
+    mockFetchResponse({ error: 'Invalid or missing API key.' }, 401);
+    const client = makeClient({ retry: false });
+    const promise = client.get('/images');
+    jest.runAllTimers();
+    const error = await promise.catch((e: unknown) => e);
+    expect((error as ViucraftError).message).toBe('Invalid or missing API key.');
+    expect((error as ViucraftError).code).toBe('API_ERROR');
+    expect((error as ViucraftError).requestId).toBeUndefined();
+  });
 });

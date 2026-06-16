@@ -12,13 +12,20 @@ export class ViucraftError extends Error {
   public readonly rateLimit?: RateLimitInfo;
   /** Raw response data from the API */
   public readonly responseData?: unknown;
+  /**
+   * Server-assigned request identifier (from the `X-Request-Id` response header or the
+   * error envelope's `request_id`). Quote this when reporting an issue — it lets support
+   * trace the exact request in the backend logs.
+   */
+  public readonly requestId?: string;
 
   constructor(
     message: string,
     code: string = 'VIUCRAFT_ERROR',
     status?: number,
     rateLimit?: RateLimitInfo,
-    responseData?: unknown
+    responseData?: unknown,
+    requestId?: string
   ) {
     super(message);
     this.name = 'ViucraftError';
@@ -26,6 +33,7 @@ export class ViucraftError extends Error {
     this.status = status;
     this.rateLimit = rateLimit;
     this.responseData = responseData;
+    this.requestId = requestId;
     Object.setPrototypeOf(this, ViucraftError.prototype);
   }
 }
@@ -56,9 +64,10 @@ export class ViucraftRateLimitError extends ViucraftError {
     message: string,
     retryAfter?: number,
     rateLimit?: RateLimitInfo,
-    responseData?: unknown
+    responseData?: unknown,
+    requestId?: string
   ) {
-    super(message, 'RATE_LIMIT_ERROR', 429, rateLimit, responseData);
+    super(message, 'RATE_LIMIT_ERROR', 429, rateLimit, responseData, requestId);
     this.name = 'ViucraftRateLimitError';
     this.retryAfter = retryAfter;
     Object.setPrototypeOf(this, ViucraftRateLimitError.prototype);

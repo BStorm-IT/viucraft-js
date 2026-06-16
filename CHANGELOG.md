@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`ViucraftError.requestId`.** Errors now carry the server-assigned request identifier (read
+  from the `X-Request-Id` response header, falling back to the error envelope's `request_id`).
+  Quote it when reporting an issue so support can trace the exact request in the backend logs.
+
+### Changed
+- **Error parsing reads the canonical nested envelope.** `FetchClient` now understands the
+  backend's `{ error: { code, message, request_id, ... } }` shape in addition to the legacy flat
+  `{ error: "<message>" }` / `{ error_message }` forms. As a result, `ViucraftError.code` now
+  surfaces the server's machine-readable code (e.g. `image_not_found`) when present, instead of
+  always the generic `API_ERROR`.
+
 ### Fixed
 - **Double-slash on no-op (canonical) URLs.** `ImageBuilder.toURL()` emitted
   `https://<sub>.viucraft.com//<id>.<ext>` when no transforms were chained, because the

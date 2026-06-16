@@ -233,28 +233,49 @@ export class FetchClient {
       // Response body may not be JSON — ignore parse error
     }
 
+    // Canonical error envelope is `{ error: { code, message, request_id, ... } }`.
+    // Older/ad-hoc endpoints use a flat `{ error: '<message>', message }` shape — support both.
+    const errorObj =
+      data?.error && typeof data.error === 'object'
+        ? (data.error as Record<string, unknown>)
+        : undefined;
+
+    // Server-assigned request id: prefer the response header, fall back to the envelope.
+    const requestId =
+      response.headers.get('x-request-id') ??
+      (typeof errorObj?.request_id === 'string' ? errorObj.request_id : undefined) ??
+      undefined;
+
     if (response.status === 429) {
       const retryAfter = this.parseRetryAfter(response.headers);
       throw new ViucraftRateLimitError(
         'Rate limit exceeded',
         retryAfter,
         rateLimit,
-        data
+        data,
+        requestId
       );
     }
 
     const message =
       (data?.error_message as string) ||
       (data?.message as string) ||
-      (data?.error as string) ||
+      (typeof errorObj?.message === 'string' ? errorObj.message : undefined) ||
+      (typeof data?.error === 'string' ? data.error : undefined) ||
       `API error: ${response.status}`;
+
+    // Surface the server's machine-readable code when present (e.g. `image_not_found`),
+    // falling back to the generic marker for endpoints that don't send one.
+    const code =
+      (typeof errorObj?.code === 'string' ? errorObj.code : undefined) || 'API_ERROR';
 
     throw new ViucraftError(
       message,
-      'API_ERROR',
+      code,
       response.status,
       rateLimit,
-      data
+      data,
+      requestId
     );
   }
 
