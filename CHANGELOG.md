@@ -5,6 +5,25 @@ All notable changes to the VIUCraft JavaScript SDK will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Double-slash on no-op (canonical) URLs.** `ImageBuilder.toURL()` emitted
+  `https://<sub>.viucraft.com//<id>.<ext>` when no transforms were chained, because the
+  empty operations segment was always joined in — the server rejects that path with `405`.
+  The operations segment is now omitted when there are no instructions, so the canonical URL
+  is a single-slash `https://<sub>.viucraft.com/<id>.<ext>` (paid, free-tier, and subdomain
+  forms all fixed). The unit test that previously asserted the broken `//` output has been
+  corrected, and regression tests assert no generated URL contains `//`.
+- **`crop()` height validation lower bound.** `crop()` validated height with
+  `validateRange('height', height, height, …)` — the minimum bound was the value itself, a
+  dead check (masked today by the prior positive-integer guard). Corrected to a lower bound of
+  `1` to match `width` and guard against regressions; added an upper-bound (`MAX_DIMENSION`) test.
+
+### Changed
+- npm package metadata: clearer "official SDK" `description`, expanded `keywords` for
+  discoverability, and a README header that links to npm, docs, and the GitHub source.
+
 ## [2.1.0] - 2026-06-09
 
 ### Added

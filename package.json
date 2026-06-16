@@ -1,7 +1,7 @@
 {
   "name": "viucraft",
   "version": "2.1.0",
-  "description": "JavaScript SDK for the Viucraft image processing service",
+  "description": "Official JavaScript/TypeScript SDK for the Viucraft image processing & transformation API — zero-dependency, fully typed, dual ESM + CJS.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -31,12 +31,21 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "viucraft",
     "image",
-    "processing",
+    "image-processing",
+    "image-transformation",
+    "image-cdn",
+    "image-resize",
     "resize",
     "crop",
     "thumbnail",
-    "viucraft"
+    "on-the-fly",
+    "sdk",
+    "official",
+    "typescript",
+    "esm",
+    "cjs"
   ],
   "author": "Viucraft",
   "license": "MIT",

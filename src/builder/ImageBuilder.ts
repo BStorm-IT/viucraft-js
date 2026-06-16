@@ -122,7 +122,7 @@ export class ImageBuilder {
     validatePositiveInteger('width', width);
     validatePositiveInteger('height', height);
     validateRange('width', width, 1, MAX_DIMENSION);
-    validateRange('height', height, height, MAX_DIMENSION);
+    validateRange('height', height, 1, MAX_DIMENSION);
     this.instructions.crop = { left, top, width, height };
     return this;
   }
@@ -556,12 +556,18 @@ export class ImageBuilder {
       ? formatShortInstructions(this.instructions)
       : formatProcessingInstructions(this.instructions);
 
+    // Only include an operations segment when transforms are actually chained.
+    // With no operations, `formattedInstructions` is '' — joining it in produces a
+    // double slash (`https://sub.viucraft.com//{id}.ext`) which the server rejects
+    // with 405. The canonical (no-op) URL must be a single slash.
+    const opsSegment = formattedInstructions ? `${formattedInstructions}/` : '';
+
     // For free plans, add the account ID to the URL
     if (!this.config.subdomain && this.config.accountId) {
-      return `${baseUrl}/free/${this.config.accountId}/${formattedInstructions}/${this.imageId}.${this.format}`;
+      return `${baseUrl}/free/${this.config.accountId}/${opsSegment}${this.imageId}.${this.format}`;
     }
 
-    return `${baseUrl}/${formattedInstructions}/${this.imageId}.${this.format}`;
+    return `${baseUrl}/${opsSegment}${this.imageId}.${this.format}`;
   }
 
   /**

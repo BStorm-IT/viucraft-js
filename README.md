@@ -1,6 +1,11 @@
 # Viucraft JavaScript SDK
 
-A JavaScript SDK for integrating with the Viucraft image processing service.
+The **official** JavaScript/TypeScript SDK for [Viucraft](https://viucraft.com) — the image
+processing & transformation API. Zero runtime dependencies, fully typed, dual ESM + CJS.
+
+- 📦 **npm:** [`viucraft`](https://www.npmjs.com/package/viucraft) — `npm install viucraft`
+- 📚 **Docs:** https://viucraft.com/docs
+- 🧩 **Source:** https://github.com/BStorm-IT/viucraft-js
 
 ## Installation
 

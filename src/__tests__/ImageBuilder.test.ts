@@ -11,9 +11,20 @@ function builder(imageId = 'test-image-id') {
 
 describe('ImageBuilder', () => {
   describe('basic URL generation', () => {
-    it('should generate a basic URL with no transformations', () => {
+    it('should generate a basic URL with no transformations (single slash, no //)', () => {
       const url = builder().toURL();
-      expect(url).toBe('https://api.viucraft.com//test-image-id.jpg');
+      expect(url).toBe('https://api.viucraft.com/test-image-id.jpg');
+      expect(url).not.toContain('//test-image-id');
+    });
+
+    it('should not emit a double slash on a no-op URL with a subdomain', () => {
+      const b = new ImageBuilder('img1', { subdomain: 'myapp', baseUrl: 'https://api.viucraft.com' });
+      expect(b.setFormat('webp').toURL()).toBe('https://myapp.viucraft.com/img1.webp');
+    });
+
+    it('should not emit a double slash on a no-op free-tier URL', () => {
+      const b = new ImageBuilder('img1', { baseUrl: 'https://viucraft.com', accountId: 'acc_123' });
+      expect(b.toURL()).toBe('https://viucraft.com/free/acc_123/img1.jpg');
     });
 
     it('should use subdomain when provided', () => {
@@ -125,6 +136,10 @@ describe('ImageBuilder', () => {
     it('should reject non-positive dimensions', () => {
       expect(() => builder().crop(0, 0, 0, 100)).toThrow(ViucraftValidationError);
       expect(() => builder().crop(0, 0, 100, 0)).toThrow(ViucraftValidationError);
+    });
+
+    it('should reject height exceeding MAX_DIMENSION', () => {
+      expect(() => builder().crop(0, 0, 100, 16385)).toThrow(ViucraftValidationError);
     });
   });
 
