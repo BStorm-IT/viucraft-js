@@ -253,8 +253,8 @@ describe('ImageBuilder', () => {
     });
 
     it('should support crop strategy', () => {
-      const url = builder().thumbnail(150, 150, 'entropy').toURL();
-      expect(url).toContain('thumbnail_width_150_height_150_crop_entropy');
+      const url = builder().thumbnail(150, 150, 'cover').toURL();
+      expect(url).toContain('thumbnail_width_150_height_150_crop_cover');
     });
 
     it('should reject invalid dimensions', () => {

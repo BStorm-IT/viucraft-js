@@ -310,9 +310,9 @@
             document.getElementById('blur-image').src = blurUrl;
             document.getElementById('blur-url').textContent = blurUrl;
             
-            // Thumbnail with smart crop
+            // Thumbnail with fit/crop strategy
             const thumbUrl = viucraftClient.image(imageId)
-                .thumbnail(200, 200, 'entropy')
+                .thumbnail(200, 200, 'cover')
                 .toURL();
             document.getElementById('thumb-image').src = thumbUrl;
             document.getElementById('thumb-url').textContent = thumbUrl;

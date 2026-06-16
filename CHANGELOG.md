@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`thumbnail()` crop strategy values were wrong (every thumbnail-with-crop URL `400`ed).**
+  The `crop` parameter typed `'centre' | 'entropy' | 'attention'` (libvips names), but the server's
+  thumbnail `crop` enum is `'cover' | 'contain' | 'fill' | 'inside' | 'outside'` — so any value the
+  SDK accepted was rejected with `400`. Corrected the type on `thumbnail()` and `ThumbnailParams`.
+  Found by the new URL contract test.
 - **`useShort()` emitted a server-rejected URL for `noise`.** The server's dash parser maps
   `noise-<amount>-<type>` (amount first), but the SDK emitted `noise-<type>-<amount>`, so a
   short-form noise URL (`noise-gaussian-0.2`) returned `400`. The builder now emits the explicit

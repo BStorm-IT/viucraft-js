@@ -1,7 +1,7 @@
 {
   "name": "viucraft",
   "version": "2.1.0",
-  "description": "Official JavaScript/TypeScript SDK for the Viucraft image processing & transformation API — zero-dependency, fully typed, dual ESM + CJS.",
+  "description": "Official JavaScript/TypeScript SDK for the Viucraft image processing & transformation API \u2014 zero-dependency, fully typed, dual ESM + CJS.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -28,7 +28,8 @@
     "build": "tsup",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "contract:urls": "node scripts/url-contract-test.mjs"
   },
   "keywords": [
     "viucraft",

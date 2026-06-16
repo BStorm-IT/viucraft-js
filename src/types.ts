@@ -73,7 +73,7 @@ export interface MedianParams {
 export interface ThumbnailParams {
   width: number;
   height: number;
-  crop?: 'centre' | 'entropy' | 'attention'; // Optional crop strategy
+  crop?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside'; // Optional fit/crop strategy (server enum)
 }
 
 export interface SmartCropParams {

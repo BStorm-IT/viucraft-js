@@ -242,13 +242,13 @@ export class ImageBuilder {
    * Create a thumbnail with optional crop strategy
    * @param width Width in pixels
    * @param height Height in pixels
-   * @param crop Optional crop strategy ('centre', 'entropy', 'attention')
+   * @param crop Optional fit/crop strategy: 'cover' (default), 'contain', 'fill', 'inside', or 'outside'
    * @returns The builder instance for chaining
    */
   public thumbnail(
     width: number,
     height: number,
-    crop?: 'centre' | 'entropy' | 'attention'
+    crop?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside'
   ): ImageBuilder {
     validatePositiveInteger('width', width);
     validatePositiveInteger('height', height);

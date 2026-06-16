@@ -83,8 +83,8 @@ describe('formatProcessingInstructions (standard format)', () => {
   });
 
   it('should format thumbnail with crop', () => {
-    const result = formatProcessingInstructions({ thumbnail: { width: 150, height: 150, crop: 'entropy' } });
-    expect(result).toBe('thumbnail_width_150_height_150_crop_entropy');
+    const result = formatProcessingInstructions({ thumbnail: { width: 150, height: 150, crop: 'cover' } });
+    expect(result).toBe('thumbnail_width_150_height_150_crop_cover');
   });
 
   it('should format smartcrop', () => {
@@ -391,8 +391,8 @@ describe('formatShortInstructions', () => {
   });
 
   it('should format thumbnail with crop', () => {
-    const result = formatShortInstructions({ thumbnail: { width: 150, height: 150, crop: 'attention' } });
-    expect(result).toBe('thumb-150-150-attention');
+    const result = formatShortInstructions({ thumbnail: { width: 150, height: 150, crop: 'cover' } });
+    expect(result).toBe('thumb-150-150-cover');
   });
 
   it('should format smartcrop', () => {
