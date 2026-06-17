@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-17
+
 ### Fixed
 - **`thumbnail()` crop strategy values were wrong (every thumbnail-with-crop URL `400`ed).**
   The `crop` parameter typed `'centre' | 'entropy' | 'attention'` (libvips names), but the server's
