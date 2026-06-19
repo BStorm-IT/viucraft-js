@@ -22,7 +22,8 @@
     "dist",
     "README.md",
     "CHANGELOG.md",
-    "MIGRATION.md"
+    "MIGRATION.md",
+    "AGENTS.md"
   ],
   "scripts": {
     "build": "tsup",
